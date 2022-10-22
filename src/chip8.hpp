@@ -45,8 +45,8 @@ class Chip8 {
             srand(time(NULL));
         }
 
-        void fetch(std::string romName) {
-            FILE *romFile = fopen(romName.c_str(), "rb");
+        void fetch(const char* romName) {
+            FILE *romFile = fopen(romName, "rb");
             fseek(romFile, 0, SEEK_END); // goto end
             int length = ftell(romFile); // get length
             fseek(romFile, 0, SEEK_SET); // goto start
@@ -89,7 +89,7 @@ class Chip8 {
             }
             // Annn set index register
             else if((opcode & 0xF000) == 0xA000) {
-                I = opcode & 0x0FFF;
+                I = (opcode & 0x0FFF);
                 //std::cout << "set index to " << (opcode & 0x0FFF) << std::endl;
             }
             // dxyn display/draw
@@ -188,11 +188,14 @@ class Chip8 {
             }
             // 8xy7 vx = vy-vx, and store if negative or not in vF
             else if((opcode & 0xF00F) == 0x8007) {
-                v[0xF] = !(v[(opcode & 0x0F00) >> 8] > v[(opcode & 0x00F0) >> 4]);
-                v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 4]-v[(opcode & 0x0F00) >> 8];
+                if(v[(opcode & 0x0F00) >> 8] > v[(opcode & 0x00F0) >> 4])
+                    v[0xF] = 0;
+                else
+                    v[0xF] = 1;
+                v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
             }
             // 9xy0 skip if vx not equal vy
-            else if((opcode & 0xF00F) == 0x9007) {
+            else if((opcode & 0xF00F) == 0x9000) {
                 if(v[(opcode & 0x0F00) >> 8] != v[(opcode & 0x00F0) >> 4]) { 
                     PC += 2;
                 }
@@ -224,17 +227,19 @@ class Chip8 {
             }
             // Fx0A stop all execution, store next key-press in Vx
             else if((opcode & 0xF0FF) == 0xF00A) {
-                    bool pressed = false;
-                    while (!pressed) {
-                        for(int i = 0; i < 16; ++i)
-                        {
-                            if(display->getKey(i) == 1)
-                            {
-                                v[(opcode & 0x0F00) >> 8] = i;
-                                pressed = true;
-                            }
-                        }
+                bool pressed = false;
+                for(int i = 0; i < 16; ++i)
+                {
+                    if(display->getKey(i) == 1)
+                    {
+                        v[(opcode & 0x0F00) >> 8] = i;
+                        pressed = true;
                     }
+                }
+                if(!pressed) { // prob was here and also bc a few typos and stuff
+                    incPC = false; // just restart
+                    return;
+                }
             }
             // Fx15 set delay = vX
             else if((opcode & 0xF0FF) == 0xF015) {
@@ -262,14 +267,14 @@ class Chip8 {
             }
             // Fx55 copies v0 to vx into memory, starting at location I
             else if((opcode & 0xF0FF) == 0xF055) {
-                for (size_t reg = 0; reg < ((opcode & 0x0F00) >> 8); reg++)
+                for (size_t reg = 0; reg <= ((opcode & 0x0F00) >> 8); reg++)
                 {
                     memory[I+reg] = v[reg];
                 }
             }
             // Fx65 copies bytes starting at location I into register v0 to vx
             else if((opcode & 0xF0FF) == 0xF065) {
-                for (size_t reg = 0; reg < ((opcode & 0x0F00) >> 8); reg++)
+                for (size_t reg = 0; reg <= ((opcode & 0x0F00) >> 8); reg++)
                 {
                     v[reg] = memory[I+reg];
                 }
