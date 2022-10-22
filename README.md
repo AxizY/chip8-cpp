@@ -6,3 +6,5 @@ IBM LOGO:
 
 PONG:
 ![PONG](pongEx.png)
+
+To build you should install glad and then use cmake.
