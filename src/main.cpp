@@ -8,9 +8,11 @@
 
 // its bc it needs poll events, but swapbuffers need to be every draw call
 
-// smth wrong with the font
+// input fixed!
 
-int main(int argc, char *argv[])
+// only thing needed now is sound, but its not a priority
+
+int main(int argc, char* argv[])
 {
     if(argc == 1) {
         std::cout << "ERROR: no file/rom specified" << std::endl;
