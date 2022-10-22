@@ -10,21 +10,21 @@
 uint8_t keys[16];
 
 uint8_t keycodes[16] {
+    GLFW_KEY_X,
     GLFW_KEY_1,
     GLFW_KEY_2,
     GLFW_KEY_3,
-    GLFW_KEY_4,
     GLFW_KEY_Q,
     GLFW_KEY_W,
     GLFW_KEY_E,
-    GLFW_KEY_R,
     GLFW_KEY_A,
     GLFW_KEY_S,
     GLFW_KEY_D,
-    GLFW_KEY_F,
     GLFW_KEY_Z,
-    GLFW_KEY_X,
     GLFW_KEY_C,
+    GLFW_KEY_4,
+    GLFW_KEY_R,
+    GLFW_KEY_F,
     GLFW_KEY_V,
 };
 
@@ -33,7 +33,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void key(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void keyf(GLFWwindow* window, int key, int scancode, int action, int mods) {
     for (size_t i = 0; i < 16; i++)
     {
         if(key == keycodes[i]) {
@@ -75,7 +75,6 @@ class Screen {
                 }
                 
             }
-            
         }
 };
 
@@ -115,16 +114,16 @@ class Display {
 
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-            glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+            glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
             window = glfwCreateWindow(1280, 640, "Chip-8", NULL, NULL);
             glfwMakeContextCurrent(window);
 
             gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
             glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-            glfwSetKeyCallback(window, key);
+            glfwSetKeyCallback(window, keyf);
             glViewport(0, 0, 1280, 640);
 
             shader.vertex("src/resources/shader.vert");
@@ -133,7 +132,7 @@ class Display {
 
             createPlane();
         }
-
+    
         void pollEvents() {
             glfwPollEvents();
         }
@@ -151,6 +150,7 @@ class Display {
                     }
                 }
             }
+
             glfwSwapBuffers(window);
         }
 
@@ -174,16 +174,16 @@ class Display {
 
         bool checkCycle() {
             if(glfwGetTime() - lastCycle > (1.0f/500.0f)) { 
-                return true;
                 lastCycle = glfwGetTime();
+                return true;
             }
             return false;
         }
 
         bool checkTimer() {
             if(glfwGetTime() - lastTimer > (1.0f/60.0f)) {
-                return true;
                 lastTimer = glfwGetTime();
+                return true;
             }
             return false;
         }
