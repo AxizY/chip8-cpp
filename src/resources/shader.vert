@@ -1,10 +1,11 @@
 #version 330 core
 layout (location = 0) in vec3 vertex;
+layout (location = 1) in vec2 _texCoord;
 
-uniform mat4 perspective;
-uniform vec2 position;
+out vec2 texCoord;
 
 void main()
 {
-    gl_Position = perspective * vec4(vertex.x + position.x*20, vertex.y + position.y*20, 1.0, 1.0);
+    gl_Position = vec4(vertex.xyz, 1.0);
+    texCoord = _texCoord;
 }
