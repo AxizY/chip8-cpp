@@ -35,29 +35,19 @@ class Chip8 {
         uint16_t I = 0;
         uint8_t SP = 0;
         uint16_t PC = 0x200;
-        Display* display;
+        Display display;
         int count = 0;
 
-    public:
-        bool drawFlag = true;
-        Chip8(Display* _display) {
-            display = _display;
-            srand(time(NULL));
-        }
-
-        void fetch(const char* romName) {
-            FILE *romFile = fopen(romName, "rb");
-            fseek(romFile, 0, SEEK_END); // goto end
-            int length = ftell(romFile); // get length
-            fseek(romFile, 0, SEEK_SET); // goto start
-            fread(memory + 0x200, length, 1, romFile); // read the romfile into the memory 0x200
-            fclose(romFile);
-            for (int i = 0; i < 80; i++) {
-                memory[i] = fonts[i]; // load in the font
+        void updateTimers() {
+            if(delay > 0) {
+                delay--;
             }
-            for (size_t i = 0; i < 16; i++)
+            
+            if(timer > 0)
             {
-                v[i] = 0;
+                if(timer == 1) {
+                    timer--;
+                }
             }
         }
 
@@ -68,7 +58,7 @@ class Chip8 {
 
             // 00E0 clear display
             if(opcode == 0x00E0) {
-                display->clear();
+                display.clear();
                 //std::cout << "clear" << std::endl;
             }
             // 1nnn jump
@@ -107,14 +97,14 @@ class Chip8 {
                     {
                         if((pixel & (0x80 >> w)) != 0)
                         {
-                            if(display->getPixel(x+w, y+i) == 1) {
+                            if(display.getPixel(x+w, y+i) == 1) {
                                 v[0xF] = 1;
                             }
                             bool z = 0;
-                            if(display->getPixel(x+w, y+i) == 0) {
+                            if(display.getPixel(x+w, y+i) == 0) {
                                 z = 1;
                             }
-                            display->changePixel(x+w, y+i, z);
+                            display.changePixel(x+w, y+i, z);
                         }
                     }
                 }
@@ -211,13 +201,13 @@ class Chip8 {
             }
             // Ex9E skip if key with value of vX is pressed
             else if((opcode & 0xF0FF) == 0xE09E) {
-                if(display->getKey(v[(opcode & 0x0F00) >> 8]) == 1) {
+                if(display.getKey(v[(opcode & 0x0F00) >> 8]) == 1) {
                     PC += 2;
                 }
             }
             // ExA1 ^^ skip if key not pressed
             else if((opcode & 0xF0FF) == 0xE0A1) {
-                if(display->getKey(v[(opcode & 0x0F00) >> 8]) == 0) {
+                if(display.getKey(v[(opcode & 0x0F00) >> 8]) == 0) {
                     PC += 2;
                 }
             }
@@ -230,7 +220,7 @@ class Chip8 {
                 bool pressed = false;
                 for(int i = 0; i < 16; ++i)
                 {
-                    if(display->getKey(i) == 1)
+                    if(display.getKey(i) == 1)
                     {
                         v[(opcode & 0x0F00) >> 8] = i;
                         pressed = true;
@@ -278,6 +268,8 @@ class Chip8 {
                 {
                     v[reg] = memory[I+reg];
                 }
+            } else {
+                std::cout << "opcode not found" << std::endl;
             }
 
             if (incPC) {
@@ -285,18 +277,59 @@ class Chip8 {
             }
         }
 
-        void updateTimers() {
-            if(delay > 0) {
-                delay--;
+    public:
+        bool drawFlag = true;
+        Chip8() {
+            srand(time(NULL));
+        }
+
+        void fetch(const char* romName) {
+            FILE *romFile = fopen(romName, "rb");
+            fseek(romFile, 0, SEEK_END); // goto end
+            int length = ftell(romFile); // get length
+            fseek(romFile, 0, SEEK_SET); // goto start
+            fread(memory + 0x200, length, 1, romFile); // read the romfile into the memory 0x200
+            fclose(romFile);
+            for (int i = 0; i < 80; i++) {
+                memory[i] = fonts[i]; // load in the font
             }
-            
-            if(timer > 0)
+            for (size_t i = 0; i < 16; i++)
             {
-                if(timer == 1) {
-                    timer--;
-                }
+                v[i] = 0;
             }
         }
-};
 
+        void preCycle() {
+            display.preCycle();
+        }
+
+        void postCycle() {
+            display.postCycle();
+        }
+
+        void checkDraw() {
+            if(drawFlag) {
+                display.updateTexture();
+                drawFlag = false;
+            }
+            display.loop();
+        }
+
+        void checkTimes() {
+            if(display.checkCycle()) {
+                oneCycle();
+            }
+            if(display.checkTimers()) {
+                updateTimers();
+            }
+        }
+
+        bool on() {
+            return !display.shouldClose();
+        }
+
+        void end() {
+            display.end();
+        }
+};
 #endif
