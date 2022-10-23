@@ -1,16 +1,23 @@
-#include <glad/glad.h>
-#include "shader.hpp"
-#include "renderer.hpp"
-#include "engine.hpp"
 #include "chip8.hpp"
-#include <GLFW/glfw3.h>
 #include <iostream>
 
-// its bc it needs poll events, but swapbuffers need to be every draw call
 
-// input fixed!
+// it was bc of the texparamtersi!!!!!!!!!!!!!!!!!
+// the array that is being used draw into the texture should not be declared/initiazlied right before!!!!!
+// gltex2d!!!!!!
+// we needed texparatm,ers i!!!!!!!!!!!
+// also to declare the array before
+// GLPIXELSTORE????? maybe
+// TEXPARAMETERSI!!!!!!!!!!!!!!!!!!!!!!
+// gltex2d is for intial
+// gltexsub is for update
+// https://docs.gl/gl3/glPixelStore
 
-// only thing needed now is sound, but its not a priority
+// fix imGUI!!!!!!!!!!!!!
+// textures work but kinda slow
+
+// save this current appraoach to github!!!
+// learn pbos!!
 
 int main(int argc, char* argv[])
 {
@@ -19,24 +26,15 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    Screen<64, 32> screen;
-    Display display(&screen);
-    Chip8 console(&display);
+    Chip8 console;
 
     console.fetch(argv[1]);
-    while(!display.shouldClose()) {
-        if(display.checkCycle()) {
-            console.oneCycle();
-        }
-        if(display.checkTimer()) {
-            console.updateTimers();
-        }
-        if(console.drawFlag) {
-            display.loop();
-            console.drawFlag = false;
-        }
-        display.pollEvents();
+    while(console.on()) {
+        console.preCycle();
+        console.checkTimes();
+        console.checkDraw();
+        console.postCycle();
     }
-    display.end();
+    console.end();
     return 0;
 }
